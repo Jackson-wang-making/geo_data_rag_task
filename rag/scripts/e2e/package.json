@@ -1,0 +1,20 @@
+{
+  "name": "trendee-rag-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright drills for the Trendee RAG Streamlit app",
+  "scripts": {
+    "upload-reindex": "node p1_upload_reindex.js",
+    "generate-downloads": "node p2_generate_downloads.js",
+    "missing-key": "node p3_missing_key.js",
+    "embed-outage": "node p4_embed_outage.js",
+    "local-embed-failure": "node p4b_local_embed_failure.js",
+    "faq-ui": "node p5_faq_ui.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

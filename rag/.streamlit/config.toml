@@ -1,0 +1,9 @@
+[server]
+address = "127.0.0.1"
+headless = true
+# sentence-transformers + transformers 会触发 watcher 扫描并打印 torchvision
+# 缺失的 traceback；demo 不需要热重载，关闭文件监视以避免误导性错误日志。
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false

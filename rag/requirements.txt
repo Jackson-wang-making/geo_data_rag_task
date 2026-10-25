@@ -1,0 +1,13 @@
+streamlit>=1.32
+pymupdf>=1.24
+faiss-cpu>=1.8
+numpy>=1.26
+requests>=2.31
+rank-bm25>=0.2.2
+jieba>=0.42.1
+python-dotenv>=1.0
+pytest>=8.0
+
+# 默认 local provider 需要；若显式改用可选的 EMBEDDING_PROVIDER=ollama 可跳过
+sentence-transformers>=3.0
+torch>=2.0

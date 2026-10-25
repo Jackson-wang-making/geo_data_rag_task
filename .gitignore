@@ -1,0 +1,27 @@
+﻿# Runtime and environments
+.omx/
+.venv/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/node_modules/
+rag/scripts/e2e/out/
+
+# Secrets
+.env
+**/.env
+!**/.env.example
+
+# RAG runtime state
+rag/data/
+rag/artifacts/
+rag/.streamlit/secrets.toml
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
