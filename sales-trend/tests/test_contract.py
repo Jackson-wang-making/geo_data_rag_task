@@ -106,6 +106,8 @@ def test_repository_uses_a_lazy_connection_pool():
     assert "max_size=10" in source
     assert "timeout=5" in source
     assert "with self._pool().connection() as connection" in source
+    assert "self._pool_lock" in source
+    assert "with self._pool_lock:" in source
 
     repo = PostgresSalesTrendRepository(None)
     assert repo._pool_obj is None  # construction stays side-effect free

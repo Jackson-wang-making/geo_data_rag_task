@@ -356,3 +356,30 @@ def test_day_granularity_rejects_oversized_points(api, monkeypatch):
     assert payload["error"]["code"] == "RANGE_TOO_LARGE"
     assert payload["error"]["details"]["max_points"] == 10
     assert payload["error"]["details"]["requested_points"] == 31
+
+
+def test_week_and_month_granularity_enforce_points_guard(api, monkeypatch):
+    client, _ = api
+    monkeypatch.setattr("app.services.sales_trends.MAX_SERIES_POINTS", 10)
+
+    week = client.get(
+        "/v1/sales/trends",
+        params={
+            "start_date": "2024-01-01",
+            "end_date": "2024-02-01",
+            "granularity": "week",
+        },
+    )
+    month = client.get(
+        "/v1/sales/trends",
+        params={
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31",
+            "granularity": "month",
+        },
+    )
+
+    assert week.status_code == 422
+    assert week.json()["error"]["code"] == "RANGE_TOO_LARGE"
+    assert month.status_code == 422
+    assert month.json()["error"]["code"] == "RANGE_TOO_LARGE"

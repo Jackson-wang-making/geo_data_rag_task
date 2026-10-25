@@ -128,3 +128,29 @@ def test_quality_rejects_invalid_rows_after_exact_deduplication() -> None:
         "invalid_sales_count": 1,
         "invalid_source": 1,
     }
+
+
+def test_quality_rejects_titles_with_empty_normalized_form() -> None:
+    raw = pd.DataFrame(
+        [
+            [3001, "Maxi Dress Floral", 5, "2024-01-01 07:00:00", "U1", "dress", "app"],
+            [3002, "优雅连衣裙", 3, "2024-01-02 08:00:00", "U2", "dress", "website"],
+        ],
+        columns=[
+            "product_id",
+            "title",
+            "sales_count",
+            "timestamp",
+            "user_id",
+            "category",
+            "source",
+        ],
+    )
+
+    prepared = assess_quality(raw)
+
+    assert prepared.metrics.raw_count == 2
+    assert prepared.metrics.accepted_count == 1
+    assert prepared.metrics.rejected_count == 1
+    assert prepared.metrics.reject_reasons == {"empty_title_norm": 1}
+    assert list(prepared.accepted["title"]) == ["Maxi Dress Floral"]

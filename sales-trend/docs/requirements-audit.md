@@ -37,7 +37,7 @@
 | 必要错误处理 | PASS | `app/errors.py`；`app/main.py` 统一错误 envelope；`tests/test_api.py` 覆盖错误路径 |
 | 大数据量优化说明 | PASS | `docs/architecture.md`；预聚合、月分区、索引、Redis、PgBouncer、读副本、ClickHouse 取舍 |
 | 高并发实现程度 | PARTIAL | 预聚合、分区、索引已实现；Redis、只读副本、PgBouncer 只在设计说明中，Demo 未部署 |
-| 任意日期范围 | PARTIAL | `start/end` 支持任意值；`day` 粒度限制 366 天，超过后可改用 week/month/auto，若要求“任意范围始终日粒度”则不满足 |
+| 任意日期范围 | PASS | `start/end` 支持任意值；`day`/`week`/`month` 粒度按返回点数保护（`MAX_SERIES_POINTS`，默认 100000），超限返回 422 `RANGE_TOO_LARGE`；`auto` 按跨度在 day/week/month 间粗化 |
 | 重复数据处理 | PASS | `etl/loader.py:180-213` 幂等原始导入；`sql/001_schema.sql:30-36` 唯一约束；`sql/004_standardize.sql:60` 幂等标准层 |
 | 标题归一化 | PASS | `app/normalization.py`、`sql/002_functions.sql`；token 排序；SQL/Python parity integration test |
 | timestamp/时区 | PASS | naive timestamp 按 `Asia/Shanghai` 解释；`business_date` 生成；边界测试覆盖 |
@@ -91,10 +91,10 @@ Local: 32 passed, 2 skipped（无 DATABASE_URL 时跳过集成测试）
 
 `EXPLAIN (ANALYZE, BUFFERS)` 只扫描 `app.maxi_dress_daily_2024_01`，分区裁剪有效。
 
-## 需要改进但不阻塞本任务的两点
+## 仍需注意但不阻塞本任务
 
-1. **任意日期范围**：当前默认 `day` 粒度最多 366 天；更长范围需要 `week/month/auto`。如果面试要求“任何跨度都必须能按日返回”，需要改成更大的上限或分页。
-2. **高并发生产化**：当前代码验证了预聚合和分区，但没有实际启动 Redis、PgBouncer 和只读副本；这些已在架构文档中说明，Demo 不声称已达到生产 QPS。
+1. **高并发生产化**：当前代码实现了预聚合、月分区、索引、`psycopg_pool` 连接池和 coverage 预计算，但未实际部署 Redis、PgBouncer 和只读副本；这些已在架构文档中说明，Demo 不声称已达到生产 QPS。
+2. **返回点数上限**：`day`/`week`/`month` 粒度按 `MAX_SERIES_POINTS`（默认 100000）保护，超限返回 422 `RANGE_TOO_LARGE`；如需返回超大范围可调高该阈值或分批查询。
 
 ## 最终判断
 

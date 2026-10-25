@@ -139,6 +139,9 @@ def assess_quality(raw: pd.DataFrame) -> PreparedSales:
     title_text = _text_series(distinct["title"])
     add_reason(title_text.eq(""), "empty_title")
 
+    title_norm_series = distinct["title"].map(normalize_title)
+    add_reason(title_norm_series.eq("") & title_text.ne(""), "empty_title_norm")
+
     sales_numeric = pd.to_numeric(distinct["sales_count"], errors="coerce")
     add_reason(
         sales_numeric.isna()

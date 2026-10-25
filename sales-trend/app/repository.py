@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import dataclass
 from datetime import date as Date
 from datetime import datetime
@@ -94,6 +95,7 @@ class PostgresSalesTrendRepository:
     def __init__(self, database_url: str | None) -> None:
         self.database_url = database_url
         self._pool_obj = None
+        self._pool_lock = threading.Lock()
 
     @classmethod
     def from_env(cls) -> "PostgresSalesTrendRepository":
@@ -101,28 +103,30 @@ class PostgresSalesTrendRepository:
 
     def _pool(self):
         if self._pool_obj is None:
-            if not self.database_url:
-                raise RepositoryUnavailableError("DATABASE_URL is not configured")
+            with self._pool_lock:
+                if self._pool_obj is None:
+                    if not self.database_url:
+                        raise RepositoryUnavailableError("DATABASE_URL is not configured")
 
-            try:
-                from psycopg_pool import ConnectionPool
-            except ImportError as exc:
-                raise RepositoryUnavailableError(
-                    "The psycopg_pool driver is not installed"
-                ) from exc
+                    try:
+                        from psycopg_pool import ConnectionPool
+                    except ImportError as exc:
+                        raise RepositoryUnavailableError(
+                            "The psycopg_pool driver is not installed"
+                        ) from exc
 
-            try:
-                self._pool_obj = ConnectionPool(
-                    self.database_url,
-                    min_size=1,
-                    max_size=10,
-                    timeout=5,
-                    open=True,
-                )
-            except Exception as exc:
-                raise RepositoryUnavailableError(
-                    "PostgreSQL is unavailable"
-                ) from exc
+                    try:
+                        self._pool_obj = ConnectionPool(
+                            self.database_url,
+                            min_size=1,
+                            max_size=10,
+                            timeout=5,
+                            open=True,
+                        )
+                    except Exception as exc:
+                        raise RepositoryUnavailableError(
+                            "PostgreSQL is unavailable"
+                        ) from exc
         return self._pool_obj
 
     def _fetchall(self, sql: str, params: tuple[object, ...]) -> list[tuple]:

@@ -73,6 +73,20 @@ def _normalize_platforms(values: list[str] | None) -> list[str]:
     return normalized
 
 
+def _period_count(start_date: Date, end_date: Date, granularity: str) -> int:
+    if granularity == "day":
+        return (end_date - start_date).days + 1
+    if granularity == "week":
+        first = start_date - timedelta(days=start_date.weekday())
+        last = end_date - timedelta(days=end_date.weekday())
+        return (last - first).days // 7 + 1
+    return (
+        (end_date.year - start_date.year) * 12
+        + (end_date.month - start_date.month)
+        + 1
+    )
+
+
 def _resolve_granularity(
     requested: str, start_date: Date, end_date: Date, platform_count: int
 ) -> str:
@@ -88,24 +102,26 @@ def _resolve_granularity(
     day_count = (end_date - start_date).days + 1
     if granularity == "auto":
         if day_count <= DAY_MAX_DAYS:
-            return "day"
-        if day_count <= AUTO_WEEK_MAX_DAYS:
-            return "week"
-        return "month"
+            resolved = "day"
+        elif day_count <= AUTO_WEEK_MAX_DAYS:
+            resolved = "week"
+        else:
+            resolved = "month"
+    else:
+        resolved = granularity
 
-    if granularity == "day":
-        requested_points = day_count * platform_count
-        if requested_points > MAX_SERIES_POINTS:
-            raise DomainError(
-                422,
-                "RANGE_TOO_LARGE",
-                "day granularity would return too many points",
-                {
-                    "max_points": MAX_SERIES_POINTS,
-                    "requested_points": requested_points,
-                },
-            )
-    return granularity
+    requested_points = _period_count(start_date, end_date, resolved) * platform_count
+    if requested_points > MAX_SERIES_POINTS:
+        raise DomainError(
+            422,
+            "RANGE_TOO_LARGE",
+            f"{resolved} granularity would return too many points",
+            {
+                "max_points": MAX_SERIES_POINTS,
+                "requested_points": requested_points,
+            },
+        )
+    return resolved
 
 
 def _iter_periods(start_date: Date, end_date: Date, granularity: str):
